@@ -1,4 +1,6 @@
 /* 
+ * PJLink Projector Emulator
+ * 
  * File:   main.cpp
  * Author: Alex McLain <alex@alexmclain.com>
  * 
@@ -8,8 +10,6 @@
  * PJLink Specification:
  * http://pjlink.jbmia.or.jp/english/data/PJLink%20Specifications100.pdf
  * 
- * 
- * This application emulates a PJLink projector listening on a TCP/IP port.
  * 
  * ========================================================================
  * Copyright 2012 Alex McLain
@@ -28,8 +28,12 @@
  */
 
 
+#include "UI.h"
+
 int main(int argc, char** argv) {
-    
+    UI *ui = UI::getInstance();
+    ui->initialize();
+    ui->shutdown();
     return 0;
 }
 

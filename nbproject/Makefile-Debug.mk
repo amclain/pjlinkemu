@@ -34,7 +34,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/Connection.o \
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/Projector.o \
+	${OBJECTDIR}/UI.o
 
 
 # C Compiler Flags
@@ -51,7 +54,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lcurses
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -61,10 +64,25 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/pjlinkemu: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/pjlinkemu ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
+${OBJECTDIR}/Connection.o: Connection.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Connection.o Connection.cpp
+
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/Projector.o: Projector.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Projector.o Projector.cpp
+
+${OBJECTDIR}/UI.o: UI.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/UI.o UI.cpp
 
 # Subprojects
 .build-subprojects:
