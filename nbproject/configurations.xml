@@ -45,7 +45,9 @@
         </ccTool>
         <linkerTool>
           <linkerLibItems>
-            <linkerLibStdlibItem>Curses</linkerLibStdlibItem>
+            <linkerOptionItem>-lncurses</linkerOptionItem>
+            <linkerOptionItem>-lpanel</linkerOptionItem>
+            <linkerOptionItem>-lpthread</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

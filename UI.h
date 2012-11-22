@@ -21,6 +21,17 @@ public:
 private:
     static UI *_instance;
     
+    static void end();
+    
+    WINDOW *_title;
+    WINDOW *_menu;
+    
+    WINDOW *_stateHeader;
+    WINDOW *_stateLabels;
+    WINDOW *_stateRawValues;
+    WINDOW *_stateValues;
+    WINDOW *_stateHotkeys;
+    
     UI();
     UI(const UI &orig);
     const UI &operator=(const UI &orig);
