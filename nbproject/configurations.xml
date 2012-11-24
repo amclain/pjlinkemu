@@ -4,7 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>Connection.h</itemPath>
       <itemPath>Projector.h</itemPath>
       <itemPath>UI.h</itemPath>
     </logicalFolder>
@@ -15,7 +14,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>Connection.cpp</itemPath>
       <itemPath>Projector.cpp</itemPath>
       <itemPath>UI.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
