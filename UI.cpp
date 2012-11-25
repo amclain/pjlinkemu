@@ -40,7 +40,7 @@ const UI &UI::operator=(const UI &orig) {
 }
 
 void UI::initialize() {
-    _showCommandBar = false;
+    _commandWindowState = CMD_STATE_MENU;
     _projector = Projector::getInstance();
 
     atexit(UI::end);
@@ -239,74 +239,139 @@ void UI::refresh() {
     wrefresh(_title);
     wrefresh(_console);
     
-    if (_showCommandBar == true) {
+    if (_commandWindowState == CMD_STATE_PROMPT) {
         curs_set(1);
-        wrefresh(_command);
     }
     else {
+        wclear(_command);
         curs_set(0);
         
-        // Paint menu.
-        wattron(_command, A_STANDOUT);
-        wmove(_command, 0, 0);
+        switch (_commandWindowState) {
+            case CMD_STATE_POWER:
+                wattron(_command, A_STANDOUT);
+                mvwprintw(_command, 0, 0, " 1 Off | 2 On | 3 Cooling | 4 Warming");
+                wattroff(_command, A_STANDOUT);
+                break;
+            
+            case CMD_STATE_MENU:
+            default:
+                // Paint menu.
+                wattron(_command, A_STANDOUT);
+                wmove(_command, 0, 0);
 
-        for (int i = 0; i < x; i++) {
-            wprintw(_command, " ");
+                for (int i = 0; i < x; i++) {
+                    wprintw(_command, " ");
+                }
+
+                mvwprintw(_command, 0, 0, " Quit |");
+                wattroff(_command, A_STANDOUT);
+                break;
         }
-
-        mvwprintw(_command, 0, 0, " Quit |");
-        wattroff(_command, A_STANDOUT);
         
-        wrefresh(_command);
+        
+        
     }
+    
+    wrefresh(_command);
 }
 
 void UI::doUserInput() {
     while (1) {
         int key = wgetch(_command);
+        wprintw(_console, "%d ", key);
 
-        // Are we processing a user command?
-        if (_showCommandBar == true) {
-            switch (key) {
-                case KEY_ESC:
-                    wclear(_command);
-                    _showCommandBar = false;
-                    break;
-                    
-                default:
-                    break;
-            }
-        }
-        else {
-            switch (key) {
-                case '1':
-                    break;
-                    
-                case '2':
-                    break;
-                    
-                case '3':
-                    break;
-                    
-                case '4':
-                    break;
-                    
-                case '5':
-                    break;
-                    
-                case ':':
-                    wclear(_command);
-                    mvwprintw(_command, 0, 0, ":");
-                    _showCommandBar = true;
-                    break;
+        // Command window state machine.
+        switch (_commandWindowState) {
+            
+            // Are we processing a user command?
+            case CMD_STATE_PROMPT:    
+                // Let these keys pass through.
+                if ((key > 0x20 && key < 0x7E) || key == '\n') {
+                    wprintw(_command, "%c", key);
+                }
+
+                switch (key) {
+                    // Abort command mode.
+                    case KEY_ESC:
+                        wclear(_command);
+                        _commandWindowState = CMD_STATE_MENU;
+                        break;
+
+                    // Process command.
+                    case KEY_ENTER:
+                    case '\n':
+                        char buf[255];
+                        mvwscanw(_command, 0, 0, "%s", buf);
+                        wprintw(_console, "\n%s\n", buf); //////////////////////////////////////////////////
+                        _commandWindowState = CMD_STATE_MENU;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
                 
-                case 'q':
-                    exit(0);
-                    break;
-                    
-                default:
-                    break;
-            }
+                
+            case CMD_STATE_MENU:
+                switch (key) {
+                    case '1':
+                        _commandWindowState = CMD_STATE_POWER;
+                        break;
+
+                    case '2':
+                        break;
+
+                    case '3':
+                        break;
+
+                    case '4':
+                        break;
+
+                    case '5':
+                        break;
+
+                    case ':':
+                        wclear(_command);
+                        mvwprintw(_command, 0, 0, ":");
+                        _commandWindowState = CMD_STATE_PROMPT;
+                        break;
+
+                    case 'q':
+                        exit(0);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+                
+                
+            case CMD_STATE_POWER:
+                switch (key) {
+                    case '1':
+                        
+                        break;
+                        
+                    case '2':
+                        break;
+                        
+                    case '3':
+                        break;
+                        
+                    case '4':
+                        break;
+                        
+                    default:
+                        break;
+                }
+                
+                _commandWindowState = CMD_STATE_MENU;
+                break;
+               
+                
+            default:
+                _commandWindowState = CMD_STATE_MENU;
+                break;
         }
         
         this->refresh();

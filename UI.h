@@ -8,6 +8,7 @@
 #define	UI_H
 
 #include <ncurses.h>
+#include <string>
 
 class Projector;
 
@@ -27,11 +28,18 @@ public:
     void refresh();
 
 private:
+    static const int CMD_STATE_MENU         = 0;
+    static const int CMD_STATE_PROMPT       = 1;
+    static const int CMD_STATE_POWER        = 2;
+    static const int CMD_STATE_INPUT        = 3;
+    static const int CMD_STATE_MUTE         = 4;
+    static const int CMD_STATE_ERROR        = 5;
+    static const int CMD_STATE_LAMP         = 6;
+    static const int CMD_STATE_HOURS        = 7;
+    
     static UI *_instance;
     
     static void end();
-    
-    bool _showCommandBar;
     
     Projector *_projector;
     
@@ -46,6 +54,10 @@ private:
     WINDOW *_stateRawValues;
     WINDOW *_stateValues;
     WINDOW *_stateHotkeys;
+    
+    int _commandWindowState;
+            
+    std::string _commandString;
     
     UI();
     UI(const UI &orig);
