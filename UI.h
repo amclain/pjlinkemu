@@ -67,6 +67,14 @@ private:
      * Blocks for user input until the program exits.
      */
     void doUserInput();
+    
+    /**
+     * Adds the key press to the _commandString buffer.
+     * @param key
+     */
+    void bufferKeyPress(int key);
+    
+    void clearCommandBuffer();
 };
 
 #endif	/* UI_H */

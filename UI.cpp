@@ -271,6 +271,11 @@ void UI::refresh() {
             mvwprintw(_command, 0, 0, " 1x RGB | 2x VIDEO | 3x DIGITAL | 4x STORAGE | 5x NETWORK |");
             wattroff(_command, A_STANDOUT);
             break;
+            
+            
+        case CMD_STATE_HOURS:
+            curs_set(1);
+            break;
 
 
         case CMD_STATE_MENU:
@@ -325,11 +330,13 @@ void UI::doUserInput() {
                         break;
                         
                     case '6':
+                        clearCommandBuffer();
+                        mvwprintw(_command, 0, 0, "Lamp Hours:");
                         _commandWindowState = CMD_STATE_HOURS;
                         break;
 
                     case ':':
-                        wclear(_command);
+                        clearCommandBuffer();
                         mvwprintw(_command, 0, 0, ":");
                         _commandWindowState = CMD_STATE_PROMPT;
                         break;
@@ -346,24 +353,18 @@ void UI::doUserInput() {
             
             // Are we processing a user command?
             case CMD_STATE_PROMPT:    
-                // Let these characters pass through.
-                if ((key > 0x20 && key < 0x7E) || key == '\n') {
-                    wprintw(_command, "%c", key);
-                }
+                bufferKeyPress(key);
 
                 switch (key) {
-                    // Abort command mode.
-                    case KEY_ESC:
-                        wclear(_command);
-                        _commandWindowState = CMD_STATE_MENU;
-                        break;
-
                     // Process command.
                     case KEY_ENTER:
                     case '\n':
-                        char buf[255];
-                        mvwscanw(_command, 0, 0, "%s", buf);
-                        wprintw(_console, "\n%s\n", buf); //////////////////////////////////////////////////
+                        wprintw(_console, "\n%s\n", _commandString.c_str()); // DEBUG ////////////////////////////////////////////////
+                        _commandWindowState = CMD_STATE_MENU;
+                        break;
+                        
+                    // Abort command mode.
+                    case KEY_ESC:
                         _commandWindowState = CMD_STATE_MENU;
                         break;
 
@@ -411,7 +412,24 @@ void UI::doUserInput() {
                 
                 
             case CMD_STATE_HOURS:
-                _commandWindowState = CMD_STATE_MENU;
+                bufferKeyPress(key);
+                
+                switch (key) {
+                    // Process command.
+                    case KEY_ENTER:
+                    case '\n':
+                        _projector->setLampHours(atoi(_commandString.c_str()));
+                        _commandWindowState = CMD_STATE_MENU;
+                        break;
+                        
+                    // Abort command mode.
+                    case KEY_ESC:
+                        _commandWindowState = CMD_STATE_MENU;
+                        break;
+
+                    default:
+                        break;
+                }
                 break;
                
                 
@@ -424,4 +442,25 @@ void UI::doUserInput() {
     }
     
     shutdown();
+}
+
+void UI::bufferKeyPress(int key) {
+    // Let these characters pass through.
+    if (key >= 0x20 && key <= 0x7E) {
+        _commandString.push_back(key);
+        wprintw(_command, "%c", key);
+
+    }
+    else if (key == KEY_BACKSPACE || key == 127) {
+        if (_commandString.length() > 0) {
+            _commandString.erase(_commandString.length() - 1);
+            mvwprintw(_command, getcury(_command), getcurx(_command) - 1, " ");
+            wmove(_command, getcury(_command), getcurx(_command) - 1);
+        }
+    }
+}
+
+void UI::clearCommandBuffer() {
+    _commandString.clear();
+    wclear(_command);
 }
