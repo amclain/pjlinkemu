@@ -65,7 +65,7 @@ void UI::initialize() {
     _stateHeader = newwin(2, x, 1, 0);
     _stateLabels = newwin(6, 6, 3, 3);
     _stateRawValues = newwin(6, 6, 3, 11);
-    _stateValues = newwin(6, 8, 3, 19);
+    _stateValues = newwin(6, 9, 3, 19);
     _stateHotkeys = newwin(6, 2, 3, 0);
 
     // Paint title.
@@ -245,6 +245,7 @@ void UI::refresh() {
         case CMD_STATE_PROMPT:
             curs_set(1);
             break;
+            
 
         case CMD_STATE_POWER:
             curs_set(0);
@@ -255,6 +256,19 @@ void UI::refresh() {
                 wprintw(_command, " ");
             }
             mvwprintw(_command, 0, 0, " 0 Off | 1 On | 2 Cooling | 3 Warming |");
+            wattroff(_command, A_STANDOUT);
+            break;
+            
+            
+        case CMD_STATE_INPUT:
+            curs_set(0);
+            
+            wattron(_command, A_STANDOUT);
+            wmove(_command, 0, 0);
+            for (int i = 0; i < x; i++) {
+                wprintw(_command, " ");
+            }
+            mvwprintw(_command, 0, 0, " 1x RGB | 2x VIDEO | 3x DIGITAL | 4x STORAGE | 5x NETWORK |");
             wattroff(_command, A_STANDOUT);
             break;
 
@@ -280,12 +294,55 @@ void UI::refresh() {
 }
 
 void UI::doUserInput() {
-    while (1) {
+    int inputGroup = 0;
+    
+    while (1) {    
         int key = wgetch(_command);
         wprintw(_console, "%d ", key); // DEBUG /////////////////////////////////////////////////////////////
 
         // Command Window State Machine - Input
         switch (_commandWindowState) {
+            
+            case CMD_STATE_MENU:
+                switch (key) {
+                    case '1':
+                        _commandWindowState = CMD_STATE_POWER;
+                        break;
+
+                    case '2':
+                        _commandWindowState = CMD_STATE_INPUT;
+                        break;
+
+                    case '3':
+                        _commandWindowState = CMD_STATE_AVMUTE;
+                        break;
+
+                    case '4':
+                        _commandWindowState = CMD_STATE_ERROR;
+                        break;
+
+                    case '5':
+                        break;
+                        
+                    case '6':
+                        _commandWindowState = CMD_STATE_HOURS;
+                        break;
+
+                    case ':':
+                        wclear(_command);
+                        mvwprintw(_command, 0, 0, ":");
+                        _commandWindowState = CMD_STATE_PROMPT;
+                        break;
+
+                    case 'q':
+                        exit(0);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+                
             
             // Are we processing a user command?
             case CMD_STATE_PROMPT:    
@@ -316,47 +373,6 @@ void UI::doUserInput() {
                 break;
                 
                 
-            case CMD_STATE_MENU:
-                switch (key) {
-                    case '1':
-                        _commandWindowState = CMD_STATE_POWER;
-                        break;
-
-                    case '2':
-                        _commandWindowState == CMD_STATE_INPUT;
-                        break;
-
-                    case '3':
-                        _commandWindowState == CMD_STATE_AVMUTE;
-                        break;
-
-                    case '4':
-                        _commandWindowState == CMD_STATE_ERROR;
-                        break;
-
-                    case '5':
-                        break;
-                        
-                    case '6':
-                        _commandWindowState == CMD_STATE_HOURS;
-                        break;
-
-                    case ':':
-                        wclear(_command);
-                        mvwprintw(_command, 0, 0, ":");
-                        _commandWindowState = CMD_STATE_PROMPT;
-                        break;
-
-                    case 'q':
-                        exit(0);
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-                
-                
             case CMD_STATE_POWER:
                 switch (key) {
                     case '`':
@@ -371,7 +387,26 @@ void UI::doUserInput() {
                 
                 
             case CMD_STATE_INPUT:
-                _commandWindowState = CMD_STATE_MENU;
+                if (inputGroup == 0) {
+                     // First key press: Select input group.
+                    switch (key) {
+                        case '1':   inputGroup = Projector::INPUT_RGB_1;        break;
+                        case '2':   inputGroup = Projector::INPUT_VIDEO_1;      break;
+                        case '3':   inputGroup = Projector::INPUT_DIGITAL_1;    break;
+                        case '4':   inputGroup = Projector::INPUT_STORAGE_1;    break;
+                        case '5':   inputGroup = Projector::INPUT_NETWORK_1;    break;
+                        default:    _commandWindowState = CMD_STATE_MENU;       break;
+                    }
+                }
+                else {
+                    // Second key press: Select input.
+                    if (key >= '1' && key <= '9') {
+                        _projector->setInputState(inputGroup + (key - 48) - 1);
+                    }
+                    
+                    inputGroup = 0;
+                    _commandWindowState = CMD_STATE_MENU;
+                }
                 break;
                 
                 
