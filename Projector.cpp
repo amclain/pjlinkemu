@@ -36,26 +36,6 @@ Projector::Projector(const Projector &orig) {
 const Projector &Projector::operator=(const Projector &orig) {
 }
 
-int Projector::getPowerState() {
-    return _PJLinkPower;
-}
-
-int Projector::getInputState() {
-    return _PJLinkInput;
-}
-
-int Projector::getAVMuteState() {
-    return _PJLinkAVMute;
-}
-
-int Projector::getErrorState() {
-    return _PJLinkError;
-}
-
-int Projector::getLampHours() {
-    return _PJLinkLampHours;
-}
-
 void Projector::close() {
     
 }
@@ -66,4 +46,44 @@ void Projector::listen() {
 
 void Projector::listen(int port) {
     
+}
+
+int Projector::getPowerState() {
+    return _PJLinkPower;
+}
+
+void Projector::setPowerState(int value) {
+    _PJLinkPower = value;
+}
+
+int Projector::getInputState() {
+    return _PJLinkInput;
+}
+
+void Projector::setInputState(int value) {
+    _PJLinkInput = value;
+}
+
+int Projector::getAVMuteState() {
+    return _PJLinkAVMute;
+}
+
+void Projector::setAVMuteState(int value) {
+    _PJLinkAVMute = value;
+}
+
+int Projector::getErrorState() {
+    return _PJLinkError;
+}
+
+void Projector::setErrorState(int value) {
+    _PJLinkError = value;
+}
+
+int Projector::getLampHours() {
+    return _PJLinkLampHours;
+}
+
+void Projector::setLampHours(int value) {
+    _PJLinkLampHours = value;
 }

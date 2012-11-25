@@ -78,10 +78,15 @@ public:
     ~Projector();
     
     int getPowerState();
+    void setPowerState(int value);
     int getInputState();
+    void setInputState(int value);
     int getAVMuteState();
+    void setAVMuteState(int value);
     int getErrorState();
+    void setErrorState(int value);
     int getLampHours();
+    void setLampHours(int value);
     
     void close();
     void listen();

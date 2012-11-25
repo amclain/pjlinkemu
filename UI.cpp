@@ -239,37 +239,41 @@ void UI::refresh() {
     wrefresh(_title);
     wrefresh(_console);
     
-    if (_commandWindowState == CMD_STATE_PROMPT) {
-        curs_set(1);
-    }
-    else {
-        wclear(_command);
-        curs_set(0);
-        
-        switch (_commandWindowState) {
-            case CMD_STATE_POWER:
-                wattron(_command, A_STANDOUT);
-                mvwprintw(_command, 0, 0, " 1 Off | 2 On | 3 Cooling | 4 Warming");
-                wattroff(_command, A_STANDOUT);
-                break;
+    // Command Window State Machine - Display
+    switch (_commandWindowState) {
+
+        case CMD_STATE_PROMPT:
+            curs_set(1);
+            break;
+
+        case CMD_STATE_POWER:
+            curs_set(0);
             
-            case CMD_STATE_MENU:
-            default:
-                // Paint menu.
-                wattron(_command, A_STANDOUT);
-                wmove(_command, 0, 0);
+            wattron(_command, A_STANDOUT);
+            wmove(_command, 0, 0);
+            for (int i = 0; i < x; i++) {
+                wprintw(_command, " ");
+            }
+            mvwprintw(_command, 0, 0, " 0 Off | 1 On | 2 Cooling | 3 Warming |");
+            wattroff(_command, A_STANDOUT);
+            break;
 
-                for (int i = 0; i < x; i++) {
-                    wprintw(_command, " ");
-                }
 
-                mvwprintw(_command, 0, 0, " Quit |");
-                wattroff(_command, A_STANDOUT);
-                break;
-        }
-        
-        
-        
+        case CMD_STATE_MENU:
+        default:
+            curs_set(0);
+            
+            // Paint menu.
+            wattron(_command, A_STANDOUT);
+            wmove(_command, 0, 0);
+
+            for (int i = 0; i < x; i++) {
+                wprintw(_command, " ");
+            }
+
+            mvwprintw(_command, 0, 0, " Quit |");
+            wattroff(_command, A_STANDOUT);
+            break;
     }
     
     wrefresh(_command);
@@ -278,14 +282,14 @@ void UI::refresh() {
 void UI::doUserInput() {
     while (1) {
         int key = wgetch(_command);
-        wprintw(_console, "%d ", key);
+        wprintw(_console, "%d ", key); // DEBUG /////////////////////////////////////////////////////////////
 
-        // Command window state machine.
+        // Command Window State Machine - Input
         switch (_commandWindowState) {
             
             // Are we processing a user command?
             case CMD_STATE_PROMPT:    
-                // Let these keys pass through.
+                // Let these characters pass through.
                 if ((key > 0x20 && key < 0x7E) || key == '\n') {
                     wprintw(_command, "%c", key);
                 }
@@ -319,15 +323,22 @@ void UI::doUserInput() {
                         break;
 
                     case '2':
+                        _commandWindowState == CMD_STATE_INPUT;
                         break;
 
                     case '3':
+                        _commandWindowState == CMD_STATE_AVMUTE;
                         break;
 
                     case '4':
+                        _commandWindowState == CMD_STATE_ERROR;
                         break;
 
                     case '5':
+                        break;
+                        
+                    case '6':
+                        _commandWindowState == CMD_STATE_HOURS;
                         break;
 
                     case ':':
@@ -348,23 +359,23 @@ void UI::doUserInput() {
                 
             case CMD_STATE_POWER:
                 switch (key) {
-                    case '1':
-                        
-                        break;
-                        
-                    case '2':
-                        break;
-                        
-                    case '3':
-                        break;
-                        
-                    case '4':
-                        break;
-                        
-                    default:
-                        break;
+                    case '`':
+                    case '0':   _projector->setPowerState(Projector::POWER_OFF);        break;
+                    case '1':   _projector->setPowerState(Projector::POWER_ON);         break;
+                    case '2':   _projector->setPowerState(Projector::POWER_COOLING);    break;
+                    case '3':   _projector->setPowerState(Projector::POWER_WARMING);    break;
+                    default:    break;
                 }
+                _commandWindowState = CMD_STATE_MENU;
+                break;
                 
+                
+            case CMD_STATE_INPUT:
+                _commandWindowState = CMD_STATE_MENU;
+                break;
+                
+                
+            case CMD_STATE_HOURS:
                 _commandWindowState = CMD_STATE_MENU;
                 break;
                

@@ -32,7 +32,7 @@ private:
     static const int CMD_STATE_PROMPT       = 1;
     static const int CMD_STATE_POWER        = 2;
     static const int CMD_STATE_INPUT        = 3;
-    static const int CMD_STATE_MUTE         = 4;
+    static const int CMD_STATE_AVMUTE         = 4;
     static const int CMD_STATE_ERROR        = 5;
     static const int CMD_STATE_LAMP         = 6;
     static const int CMD_STATE_HOURS        = 7;
