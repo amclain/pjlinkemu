@@ -17,6 +17,10 @@ public:
     
     ~UI();
     
+    /**
+     * After initialization, the thread enters private function doUserInput and
+     * blocks until the program exits.
+     */
     void initialize();
     void shutdown();
     
@@ -34,7 +38,6 @@ private:
     WINDOW *_borders;
     
     WINDOW *_title;
-    WINDOW *_menu;
     WINDOW *_command;
     WINDOW *_console;
     
@@ -47,6 +50,11 @@ private:
     UI();
     UI(const UI &orig);
     const UI &operator=(const UI &orig);
+    
+    /**
+     * Blocks for user input until the program exits.
+     */
+    void doUserInput();
 };
 
 #endif	/* UI_H */

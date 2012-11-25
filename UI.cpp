@@ -11,6 +11,8 @@
 
 using namespace std;
 
+#define KEY_ESC         (27)
+
 
 UI *UI::_instance = NULL;
 
@@ -57,7 +59,6 @@ void UI::initialize() {
     _borders = newwin(y, x, 0, 0);
     
     _title = newwin(1, x, 0, 0);
-    _menu = newwin(1, x, y - 1, 0);
     _command = newwin(1, x, y - 1, 0);
     _console = newwin(y - 10 - 3, x, 10, 0);
 
@@ -67,24 +68,19 @@ void UI::initialize() {
     _stateValues = newwin(6, 8, 3, 19);
     _stateHotkeys = newwin(6, 2, 3, 0);
 
-    // Paint the title and menu bar backgrounds.
+    // Paint title.
     wattron(_title, A_STANDOUT);
-    wattron(_menu, A_STANDOUT);
-
     wmove(_title, 0, 0);
-    wmove(_menu, 0, 0);
 
     for (int i = 0; i < x; i++) {
         wprintw(_title, " ");
-        wprintw(_menu, " ");
     }
 
     string titleString = "PJLink Device Emulator";
     mvwprintw(_title, 0, (x - titleString.length()) / 2, titleString.c_str());
-    mvwprintw(_menu, 0, 0, " Quit |");
 
     wattroff(_title, A_STANDOUT);
-    wattroff(_menu, A_STANDOUT);
+    
 
     mvwprintw(_stateHeader, 0, 3, "Param");
     mvwprintw(_stateHeader, 0, 11, "Raw");
@@ -110,12 +106,11 @@ void UI::initialize() {
     mvwprintw(_stateLabels, 5, 0, "Hours:");
     
     this->refresh();
-    wgetch(_console);
+    doUserInput();
 }
 
 void UI::shutdown() {
     delwin(_title);
-    delwin(_menu);
     delwin(_stateHeader);
     delwin(_stateLabels);
     delwin(_stateRawValues);
@@ -242,7 +237,6 @@ void UI::refresh() {
     wrefresh(_stateHotkeys);
 
     wrefresh(_title);
-    wrefresh(_menu);
     wrefresh(_console);
     
     if (_showCommandBar == true) {
@@ -251,5 +245,72 @@ void UI::refresh() {
     }
     else {
         curs_set(0);
+        
+        // Paint menu.
+        wattron(_command, A_STANDOUT);
+        wmove(_command, 0, 0);
+
+        for (int i = 0; i < x; i++) {
+            wprintw(_command, " ");
+        }
+
+        mvwprintw(_command, 0, 0, " Quit |");
+        wattroff(_command, A_STANDOUT);
+        
+        wrefresh(_command);
     }
+}
+
+void UI::doUserInput() {
+    while (1) {
+        int key = wgetch(_command);
+
+        // Are we processing a user command?
+        if (_showCommandBar == true) {
+            switch (key) {
+                case KEY_ESC:
+                    wclear(_command);
+                    _showCommandBar = false;
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        else {
+            switch (key) {
+                case '1':
+                    break;
+                    
+                case '2':
+                    break;
+                    
+                case '3':
+                    break;
+                    
+                case '4':
+                    break;
+                    
+                case '5':
+                    break;
+                    
+                case ':':
+                    wclear(_command);
+                    mvwprintw(_command, 0, 0, ":");
+                    _showCommandBar = true;
+                    break;
+                
+                case 'q':
+                    exit(0);
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        this->refresh();
+    }
+    
+    shutdown();
 }
