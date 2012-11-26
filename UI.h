@@ -7,6 +7,7 @@
 #ifndef UI_H
 #define	UI_H
 
+#include <mutex>
 #include <ncurses.h>
 #include <string>
 #include <vector>
@@ -50,6 +51,9 @@ private:
     static void end();
     
     Projector *_projector;
+    
+    std::recursive_mutex _refreshMutex;
+    std::recursive_mutex _printMutex;
     
     WINDOW *_borders;
     

@@ -131,6 +131,8 @@ void UI::shutdown() {
 }
 
 void UI::refresh() {
+    lock_guard<recursive_mutex> lg(_refreshMutex);
+    
     int x, y;
     getmaxyx(stdscr, y, x);
     
@@ -468,7 +470,7 @@ void UI::doUserInput() {
                     // Process command.
                     case KEY_ENTER:
                     case '\n':
-                        print(_commandString); // DEBUG ////////////////////////////////////////////////////////////////////////////////
+                        //print(_commandString); // DEBUG ////////////////////////////////////////////////////////////////////////////////
                         _commandWindowState = CMD_STATE_MENU;
                         break;
                         
@@ -575,6 +577,8 @@ void UI::clearCommandBuffer() {
 }
 
 void UI::print(const std::string &message) {
+    lock_guard<recursive_mutex> lg(_printMutex);
+    
     _consoleBuffer.push_back(message);
     this->refresh();
 }
