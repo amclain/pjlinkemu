@@ -264,6 +264,8 @@ void UI::refresh() {
             }
         }
         
+        if (_consoleEndLine > _consoleBuffer.size() - 1) _consoleEndLine = _consoleBuffer.size() - 1;
+        
         int consoleStartLine = (_consoleEndLine < _consoleHeight) ? 0 : _consoleEndLine - _consoleHeight + 1;
         
         for (int line = consoleStartLine; line <= _consoleEndLine; line++) {
@@ -379,22 +381,26 @@ void UI::doUserInput() {
         
         // Page Up
         else if (key2 == 91 && key3 == 53 && key4 == 126) {
-            
+            _consoleFrozen = true;
+            _consoleEndLine -= _consoleHeight / 2;
         }
         
         // Page Down
         else if (key2 == 91 && key3 == 54 && key4 == 126) {
-            
+            _consoleEndLine += _consoleHeight / 2;
+            if (_consoleEndLine >= _consoleBuffer.size() - 1) _consoleFrozen = false;
         }
         
         // Arrow Up
         else if (key2 == 91 && key3 == 65 && key4 == -1) {
-            
+            _consoleFrozen = true;
+            _consoleEndLine--;
         }
         
         // Arrow Down
         else if (key2 == 91 && key3 == 66 && key4 == -1) {
-            
+            if (_consoleEndLine < _consoleBuffer.size() - 1) _consoleEndLine++;
+            if (_consoleEndLine == _consoleBuffer.size() - 1) _consoleFrozen = false;
         }
         
         // Arrow Left
