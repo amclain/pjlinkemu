@@ -8,7 +8,13 @@
 #define	PROJECTOR_H
 
 #include <atomic>
+#include <mutex>
 #include <string>
+#include <thread>
+
+#include <netinet/in.h>
+
+class UI;
 
 class Projector {
 public:
@@ -90,12 +96,23 @@ public:
     void setLampHours(int value);
     
     void close();
+    void closeClient();
     void listen();
     void listen(int port);
     
 
 private:
     static Projector *_instance;
+    
+    UI *_ui;
+    
+    /**
+     * Emulates a bug found in Sanyo projectors where the socket hangs open if
+     * the client disconnects improperly.  The projector's ethernet cable must
+     * be disconnected and reconnected before the socket closes and the
+     * projector can accept another connection.
+     */
+    bool _emulateHangOpenBug;
     
     // PJLink Variables
     bool _PJLinkUseAuthentication;
@@ -108,12 +125,33 @@ private:
     
     std::string _PJLinkName;
     
+    std::string _PJLinkPassword;
+    
     // IP Connection Variables
+    std::thread *_socketListener;
+    std::thread *_socketTimer;
+    
+    int _port;
+    
+    std::atomic_bool _isListening;
+    std::atomic_bool _isConnected;
+    int _serverfd, _clientfd;
+    socklen_t _clientlen;
+    sockaddr_in _serveraddr, _clientaddr;
+    
+    FILE *_sin, *_sout;
+    
+    time_t _clientConnected;
+    time_t _clientTimeout;
     
     
     Projector();
     Projector(const Projector &orig);
     const Projector &operator=(const Projector &orig);
+    
+    void accept();
+    
+    void doNetworking();
 };
 
 #endif	/* PROJECTOR_H */
