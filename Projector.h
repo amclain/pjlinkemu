@@ -7,6 +7,7 @@
 #ifndef PROJECTOR_H
 #define	PROJECTOR_H
 
+#include <atomic>
 #include <string>
 
 class Projector {
@@ -99,11 +100,11 @@ private:
     // PJLink Variables
     bool _PJLinkUseAuthentication;
     
-    int _PJLinkPower;
-    int _PJLinkInput;
-    int _PJLinkAVMute;
-    int _PJLinkError;
-    int _PJLinkLampHours;
+    std::atomic_int _PJLinkPower;
+    std::atomic_int _PJLinkInput;
+    std::atomic_int _PJLinkAVMute;
+    std::atomic_int _PJLinkError;
+    std::atomic_int _PJLinkLampHours;
     
     std::string _PJLinkName;
     

@@ -6,6 +6,8 @@
 
 #include <cstdlib>
 
+using namespace std;
+
 Projector *Projector::_instance = NULL;
 
 Projector *Projector::getInstance() {
