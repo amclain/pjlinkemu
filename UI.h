@@ -9,6 +9,7 @@
 
 #include <ncurses.h>
 #include <string>
+#include <vector>
 
 class Projector;
 
@@ -26,13 +27,20 @@ public:
     void shutdown();
     
     void refresh();
+    
+    /**
+     * Print a message to the console window.
+     * A line feed will be appended.
+     * @param message
+     */
+    void print(const std::string &message);
 
 private:
     static const int CMD_STATE_MENU         = 0;
     static const int CMD_STATE_PROMPT       = 1;
     static const int CMD_STATE_POWER        = 2;
     static const int CMD_STATE_INPUT        = 3;
-    static const int CMD_STATE_AVMUTE         = 4;
+    static const int CMD_STATE_AVMUTE       = 4;
     static const int CMD_STATE_ERROR        = 5;
     static const int CMD_STATE_LAMP         = 6;
     static const int CMD_STATE_HOURS        = 7;
@@ -56,8 +64,13 @@ private:
     WINDOW *_stateHotkeys;
     
     int _commandWindowState;
+    
+    bool _consoleFrozen;
+    int _consoleHeight;
+    int _consoleEndLine;
             
     std::string _commandString;
+    std::vector<std::string> _consoleBuffer;
     
     UI();
     UI(const UI &orig);

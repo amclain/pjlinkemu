@@ -41,6 +41,14 @@ const UI &UI::operator=(const UI &orig) {
 
 void UI::initialize() {
     _commandWindowState = CMD_STATE_MENU;
+    
+    _consoleFrozen = false;
+    _consoleEndLine = 0;
+    _consoleHeight = 0;
+    
+    _commandString.clear();
+    _consoleBuffer.clear();
+    
     _projector = Projector::getInstance();
 
     atexit(UI::end);
@@ -60,7 +68,7 @@ void UI::initialize() {
     
     _title = newwin(1, x, 0, 0);
     _command = newwin(1, x, y - 1, 0);
-    _console = newwin(y - 10 - 3, x, 10, 0);
+    _console = newwin(y - 10 - 2, x, 10, 0);
 
     _stateHeader = newwin(2, x, 1, 0);
     _stateLabels = newwin(6, 6, 3, 3);
@@ -104,6 +112,8 @@ void UI::initialize() {
     mvwprintw(_stateLabels, 3, 0, "Error:");
     mvwprintw(_stateLabels, 4, 0, "Lamp:");
     mvwprintw(_stateLabels, 5, 0, "Hours:");
+    
+    _consoleHeight = getmaxy(_console);
     
     this->refresh();
     doUserInput();
@@ -237,6 +247,30 @@ void UI::refresh() {
     wrefresh(_stateHotkeys);
 
     wrefresh(_title);
+    
+    // Update the console from the buffer.
+    wclear(_console);
+    
+    if (_consoleBuffer.size() > 0) {
+        if (_consoleFrozen == false) {
+            // Console follows last line.
+            _consoleEndLine = _consoleBuffer.size() - 1;
+        }
+        else {
+            // Window is frozen, but modify _consoleEndLine so that text fills
+            // the entire window if available.
+            if (_consoleEndLine < _consoleHeight && _consoleBuffer.size() >= _consoleHeight) {
+                _consoleEndLine = _consoleHeight - 1;
+            }
+        }
+        
+        int consoleStartLine = (_consoleEndLine < _consoleHeight) ? 0 : _consoleEndLine - _consoleHeight + 1;
+        
+        for (int line = consoleStartLine; line <= _consoleEndLine; line++) {
+            wprintw(_console, "%s\n", _consoleBuffer[line].c_str());
+        }
+    }
+    
     wrefresh(_console);
     
     // Command Window State Machine - Display
@@ -303,7 +337,76 @@ void UI::doUserInput() {
     
     while (1) {    
         int key = wgetch(_command);
-        wprintw(_console, "%d ", key); // DEBUG /////////////////////////////////////////////////////////////
+        int key2 = -1;
+        int key3 = -1;
+        int key4 = -1;
+        
+        // Detect ESC
+        if (key == KEY_ESC) {
+            halfdelay(1);
+            key2 = wgetch(_command);
+            
+            // A special key other than ESC was pressed.
+            if (key2 != ERR) {
+                key = 0;
+                key3 = wgetch(_command);
+                key4 = wgetch(_command);
+            }
+            
+            cbreak();
+        }
+        
+        // DEBUG ////////////////////////////////////////////
+        /*
+        char bufk[255];
+        sprintf(bufk, "%i %i %i %i", key, key2, key3, key4);
+        string k(bufk);
+        print(k);
+        */
+        
+        // Console window navigation.
+        
+        // Home
+        if (key2 == 79 && key3 == 72 && key4 == -1) {
+            _consoleFrozen = true;
+            _consoleEndLine = 0;
+        }
+        
+        // End
+        else if (key2 == 79 && key3 == 70 && key4 == -1) {
+            _consoleFrozen = false;
+        }
+        
+        // Page Up
+        else if (key2 == 91 && key3 == 53 && key4 == 126) {
+            
+        }
+        
+        // Page Down
+        else if (key2 == 91 && key3 == 54 && key4 == 126) {
+            
+        }
+        
+        // Arrow Up
+        else if (key2 == 91 && key3 == 65 && key4 == -1) {
+            
+        }
+        
+        // Arrow Down
+        else if (key2 == 91 && key3 == 66 && key4 == -1) {
+            
+        }
+        
+        // Arrow Left
+        else if (key2 == 91 && key3 == 68 && key4 == -1) {
+            
+        }
+        
+        // Arrow Right
+        else if (key2 == 91 && key3 == 67 && key4 == -1) {
+            
+        }
+        
 
         // Command Window State Machine - Input
         switch (_commandWindowState) {
@@ -359,7 +462,7 @@ void UI::doUserInput() {
                     // Process command.
                     case KEY_ENTER:
                     case '\n':
-                        wprintw(_console, "\n%s\n", _commandString.c_str()); // DEBUG ////////////////////////////////////////////////
+                        print(_commandString); // DEBUG ////////////////////////////////////////////////////////////////////////////////
                         _commandWindowState = CMD_STATE_MENU;
                         break;
                         
@@ -463,4 +566,9 @@ void UI::bufferKeyPress(int key) {
 void UI::clearCommandBuffer() {
     _commandString.clear();
     wclear(_command);
+}
+
+void UI::print(const std::string &message) {
+    _consoleBuffer.push_back(message);
+    this->refresh();
 }
