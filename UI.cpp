@@ -271,7 +271,7 @@ void UI::refresh() {
         int consoleStartLine = (_consoleEndLine < _consoleHeight) ? 0 : _consoleEndLine - _consoleHeight + 1;
         
         for (int line = consoleStartLine; line <= _consoleEndLine; line++) {
-            wprintw(_console, "%s\n", _consoleBuffer[line].c_str());
+            wprintw(_console, "%3i:  %s\n", line + 1, _consoleBuffer[line].c_str());
         }
     }
     
