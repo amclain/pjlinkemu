@@ -75,6 +75,8 @@ void UI::initialize() {
     _stateRawValues = newwin(6, 6, 3, 11);
     _stateValues = newwin(6, 9, 3, 19);
     _stateHotkeys = newwin(6, 2, 3, 0);
+    
+    _connectionStatus = newwin(2, 10, 3, 33);
 
     // Paint title.
     wattron(_title, A_STANDOUT);
@@ -93,10 +95,12 @@ void UI::initialize() {
     mvwprintw(_stateHeader, 0, 3, "Param");
     mvwprintw(_stateHeader, 0, 11, "Raw");
     mvwprintw(_stateHeader, 0, 19, "State");
+    mvwprintw(_stateHeader, 0, 33, "Connection");
 
     mvwhline(_stateHeader, 1, 3, 0, 6);
     mvwhline(_stateHeader, 1, 11, 0, 6);
     mvwhline(_stateHeader, 1, 19, 0, 6);
+    mvwhline(_stateHeader, 1, 33, 0, 10);
 
     wattron(_stateHotkeys, A_STANDOUT);
     mvwprintw(_stateHotkeys, 0, 0, " 1");
@@ -121,11 +125,16 @@ void UI::initialize() {
 
 void UI::shutdown() {
     delwin(_title);
+    delwin(_console);
+    delwin(_command);
+    
     delwin(_stateHeader);
     delwin(_stateLabels);
     delwin(_stateRawValues);
     delwin(_stateValues);
     delwin(_stateHotkeys);
+    
+    delwin(_connectionStatus);
 
     UI::end();
 }
@@ -142,6 +151,8 @@ void UI::refresh() {
     // Draw section borders.
     mvwhline(_borders, 9, 0, 0, x - 1);
     mvwhline(_borders, y - 2, 0, 0, x - 1);
+    
+    mvwvline(_borders, 3, 30, 0, 6);
 
     mvwprintw(_stateRawValues, 0, 0, "%i", _projector->getPowerState());
     mvwprintw(_stateRawValues, 1, 0, "%i", _projector->getInputState());
@@ -238,6 +249,23 @@ void UI::refresh() {
 
     // Lamp Hours
     mvwprintw(_stateValues, 5, 0, "%i", _projector->getLampHours());
+    
+    
+    // Connection status.
+    wclear(_connectionStatus);
+    wmove(_connectionStatus, 0, 0);
+    
+    if (_projector->isConnected() == true) {
+        wprintw(_connectionStatus, "Connected");
+    }
+    else if (_projector->isListening() == true) {
+        wprintw(_connectionStatus, "Listening");
+    }
+    else {
+        wprintw(_connectionStatus, "Closed");
+    }
+    
+    mvwprintw(_connectionStatus, 1, 0, "Port: %i", 4352);
 
     
     wrefresh(_borders);
@@ -247,6 +275,8 @@ void UI::refresh() {
     wrefresh(_stateRawValues);
     wrefresh(_stateValues);
     wrefresh(_stateHotkeys);
+    
+    wrefresh(_connectionStatus);
 
     wrefresh(_title);
     
@@ -446,10 +476,19 @@ void UI::doUserInput() {
                         _commandWindowState = CMD_STATE_HOURS;
                         break;
 
-                    case ':':
+                    case ':':   // Open command prompt.
                         clearCommandBuffer();
                         mvwprintw(_command, 0, 0, ":");
                         _commandWindowState = CMD_STATE_PROMPT;
+                        break;
+                        
+                    case 'l':   // Listen for connection or close connection.
+                        if (_projector->isListening() == true) {
+                            _projector->close();
+                        }
+                        else {
+                            _projector->listen();
+                        }
                         break;
 
                     case 'q':

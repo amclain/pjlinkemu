@@ -110,6 +110,14 @@ void Projector::setLampHours(int value) {
     _PJLinkLampHours = value;
 }
 
+bool Projector::isListening() {
+    return _isListening;
+}
+
+bool Projector::isConnected() {
+    return _isConnected;
+}
+
 void Projector::close() {
     _isConnected = false;
     _isListening = false;
@@ -197,6 +205,17 @@ void Projector::accept() {
         
         _isConnected = true;
         
+        resetSocketTimeout();
+        
+        // Acknowledge client connection.
+        if (_PJLinkUseAuthentication == true) {
+
+        }
+        else {
+            fprintf(_sout, "PJLINK 0\r\n");
+            fflush(_sout);
+        }
+        
         while (_isConnected == true) {
             doNetworking();
         }
@@ -204,23 +223,60 @@ void Projector::accept() {
 }
 
 void Projector::doNetworking() {
+    if (_isConnected == false) return;
+    if (_sin == NULL) return;
+    
+    // Read command.
+    char rbuf[1024]; // Read buffer.
+    ssize_t readResult = read(_clientfd, rbuf, sizeof(rbuf));
+    if (readResult <= -1) {
+        // Read error.
+        return;
+    }
+    else if (readResult == 0) {
+        // EOF
+        _isConnected = false;
+        return;
+    }
+    
+    resetSocketTimeout();
+    
+    string received = string(rbuf);
+    string response = string("ERR1"); // Undefined PJLink command.
+    
+    // Acknowledge command.
+    if (received.find("%1POWR 1\r") == 0) {
+        _PJLinkPower = POWER_ON;
+        response = string("%1POWR=OK");
+    }
+    else if (received.find("%1POWR 0\r") == 0) {
+        _PJLinkPower = POWER_OFF;
+        response = string("%1POWR=OK\r\n");
+    }
+    else if (received.find("%1POWR ?\r") == 0) {
+        switch (_PJLinkPower) {
+            case POWER_ON:      response = string("%1POWR=1");  break;
+            case POWER_COOLING: response = string("%1POWR=2");  break;
+            case POWER_WARMING: response = string("%1POWR=3");  break;
+            case POWER_OFF:
+            default:            response = string("%1POWR=0");  break;
+        }
+    }
+    // Power instruction out of parameter.
+    else if (received.find("%1POWR ")) {
+        response = string("%1POWR=ERR2");
+    }
+    
+    fprintf(_sout, "%s\r\n", response.c_str());
+    fflush(_sout);
+}
+
+void Projector::resetSocketTimeout() {
     // Set timeout.
     if (_emulateHangOpenBug == true) {
         _clientTimeout = 0;
     }
     else {
-        _clientTimeout = _clientConnected + 30;
+        _clientTimeout = time(NULL) + 30;
     }
-    
-    // Acknowledge client connection.
-    if (_PJLinkUseAuthentication == true) {
-        
-    }
-    else {
-        fprintf(_sout, "PJLINK 0\r\n");
-    }
-    
-    // Read command.
-    
-    // Acknowledge command.
 }

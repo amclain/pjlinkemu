@@ -100,6 +100,9 @@ public:
     void listen();
     void listen(int port);
     
+    bool isListening();
+    bool isConnected();
+    
 
 private:
     static Projector *_instance;
@@ -152,6 +155,8 @@ private:
     void accept();
     
     void doNetworking();
+    
+    void resetSocketTimeout();
 };
 
 #endif	/* PROJECTOR_H */
