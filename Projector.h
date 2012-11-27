@@ -154,6 +154,11 @@ private:
     
     void accept();
     
+    /**
+     * Traps a thread in a socket accept loop.
+     */
+    void doAccept();
+    
     void doNetworking();
     
     void resetSocketTimeout();

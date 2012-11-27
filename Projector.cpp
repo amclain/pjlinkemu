@@ -126,6 +126,7 @@ void Projector::close() {
     ::close(_clientfd);
     ::close(_serverfd);
     
+    // TODO: Null checks.
     fclose(_sin);
     fclose(_sout);
     
@@ -136,7 +137,7 @@ void Projector::close() {
 void Projector::closeClient() {
     _isConnected = false;
     
-    ::close(_clientfd);
+    ::shutdown(_clientfd, SHUT_RDWR);
     
     fclose(_sin);
     fclose(_sout);
@@ -155,24 +156,31 @@ void Projector::listen(int port) {
     
     _serverfd = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverfd < 0) {
-        _ui->print(string("Failed to create socket."));
+        _ui->print("Failed to create socket.");
         return;
     }
     
     if (bind(_serverfd, (sockaddr *) &_serveraddr, sizeof(sockaddr_in)) < 0) {
-        _ui->print(string("Failed to bind socket."));
+        _ui->print("Failed to bind socket.");
         return;
     }
     
     if (::listen(_serverfd, SOMAXCONN) < 0) {
-        _ui->print(string("Failed to listen on socket."));
+        _ui->print("Failed to listen on socket.");
         return;
     }
     
     _isListening = true;
     
-    // TODO: Loop goes here. //////////////////////////////////////////////////////////////////////////
-    _socketListener = new thread(&Projector::accept, this);
+    _socketListener = new thread(&Projector::doAccept, this);
+}
+
+void Projector::doAccept() {
+    _ui->print("Socket listener thread started."); // DEBUG /////////////////////////////////////////
+    
+    while (_isListening == true) {
+        this->accept();
+    }
 }
 
 void Projector::accept() {
@@ -180,13 +188,17 @@ void Projector::accept() {
     
     bzero(&_clientaddr, sizeof(_clientaddr));
     
+    _ui->print("Blocking on accept."); // DEBUG ////////////////////////////////////////////
+    
     // Only accept one connection.
     _clientfd = ::accept(_serverfd, (sockaddr *) &_clientaddr, &_clientlen);
     if (_clientfd < 0) {
-        _ui->print(string("Failed to accept client."));
+        _ui->print("Failed to accept client.");
         return;
     }
     else {
+        _ui->print("Client connection accepted."); // DEBUG //////////////////////////////////
+        
         _clientConnected = time(NULL);
         
         // Configure client socket to blocking.
@@ -210,12 +222,16 @@ void Projector::accept() {
         
         // Acknowledge client connection.
         if (_PJLinkUseAuthentication == true) {
-
+            // TODO: Implement PJLink connection challenge.
+            //       PJLink spec p23.
+            fprintf(_sout, "PJLINK 0\r\n");
         }
         else {
             fprintf(_sout, "PJLINK 0\r\n");
-            fflush(_sout);
         }
+        fflush(_sout);
+        
+        _ui->print("Ack connection."); // DEBUG ///////////////////////////////////////////////
         
         while (_isConnected == true) {
             doNetworking();
@@ -244,8 +260,8 @@ void Projector::doNetworking() {
     
     resetSocketTimeout();
     
-    string received = string(rbuf);
-    string response = string("ERR1"); // Undefined PJLink command.
+    string received(rbuf);
+    string response("ERR1"); // Undefined PJLink command.
     
     // Check for command and parameter.
     smatch results;
@@ -255,10 +271,9 @@ void Projector::doNetworking() {
     string value = results.str(2);
     
     // DEBUG ////////////////////////////////////////////////////////////////////////////////
-    _ui->print(string(command + " " + value));
+    _ui->print(command + " " + value);
     
     
-    // Acknowledge command.
     if (command.compare("POWR") == 0) {
         if (value.compare("1")) {
             _PJLinkPower = POWER_ON;
@@ -268,6 +283,7 @@ void Projector::doNetworking() {
             _PJLinkPower = POWER_OFF;
             response = string("%1POWR=OK\r\n");
         }
+        // Power query.
         else if (value.compare("?") == 0) {
             switch (_PJLinkPower) {
                 case POWER_ON:      response = string("%1POWR=1");  break;
