@@ -13,6 +13,7 @@
 #include <fstream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <regex>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
@@ -228,6 +229,8 @@ void Projector::doNetworking() {
     
     // Read command.
     char rbuf[1024]; // Read buffer.
+    bzero (rbuf, sizeof(rbuf));
+    
     ssize_t readResult = read(_clientfd, rbuf, sizeof(rbuf));
     if (readResult <= -1) {
         // Read error.
@@ -244,31 +247,46 @@ void Projector::doNetworking() {
     string received = string(rbuf);
     string response = string("ERR1"); // Undefined PJLink command.
     
+    // Check for command and parameter.
+    smatch results;
+    bool found = regex_match(received, results, regex("%1(\\w+)\\ (\\?|[\\d]*)[\\r\\n]"));
+    
+    string command = results.str(1);
+    string value = results.str(2);
+    
+    // DEBUG ////////////////////////////////////////////////////////////////////////////////
+    _ui->print(string(command + " " + value));
+    
+    
     // Acknowledge command.
-    if (received.find("%1POWR 1\r") == 0) {
-        _PJLinkPower = POWER_ON;
-        response = string("%1POWR=OK");
-    }
-    else if (received.find("%1POWR 0\r") == 0) {
-        _PJLinkPower = POWER_OFF;
-        response = string("%1POWR=OK\r\n");
-    }
-    else if (received.find("%1POWR ?\r") == 0) {
-        switch (_PJLinkPower) {
-            case POWER_ON:      response = string("%1POWR=1");  break;
-            case POWER_COOLING: response = string("%1POWR=2");  break;
-            case POWER_WARMING: response = string("%1POWR=3");  break;
-            case POWER_OFF:
-            default:            response = string("%1POWR=0");  break;
+    if (command.compare("POWR") == 0) {
+        if (value.compare("1")) {
+            _PJLinkPower = POWER_ON;
+            response = string("%1POWR=OK");
         }
-    }
-    // Power instruction out of parameter.
-    else if (received.find("%1POWR ")) {
-        response = string("%1POWR=ERR2");
+        else if (value.compare("0") == 0) {
+            _PJLinkPower = POWER_OFF;
+            response = string("%1POWR=OK\r\n");
+        }
+        else if (value.compare("?") == 0) {
+            switch (_PJLinkPower) {
+                case POWER_ON:      response = string("%1POWR=1");  break;
+                case POWER_COOLING: response = string("%1POWR=2");  break;
+                case POWER_WARMING: response = string("%1POWR=3");  break;
+                case POWER_OFF:
+                default:            response = string("%1POWR=0");  break;
+            }
+        }
+        // Power instruction out of parameter.
+        else if (received.find("%1POWR ")) {
+            response = string("%1POWR=ERR2");
+        }
     }
     
     fprintf(_sout, "%s\r\n", response.c_str());
     fflush(_sout);
+    
+    if (response.find("ERR") != string::npos) _ui->refresh();
 }
 
 void Projector::resetSocketTimeout() {
