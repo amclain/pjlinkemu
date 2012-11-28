@@ -123,8 +123,8 @@ void Projector::close() {
     _isConnected = false;
     _isListening = false;
     
-    ::close(_clientfd);
-    ::close(_serverfd);
+    ::shutdown(_clientfd, SHUT_RDWR);
+    ::shutdown(_serverfd, SHUT_RDWR);
     
     // TODO: Null checks.
     fclose(_sin);
@@ -150,6 +150,8 @@ void Projector::listen() {
 void Projector::listen(int port) {
     if (_isListening == true) return;
     
+    _port = port;
+    
     _serveraddr.sin_family = AF_INET;
     _serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     _serveraddr.sin_port = htons(_port);
@@ -160,7 +162,7 @@ void Projector::listen(int port) {
         return;
     }
     
-    if (bind(_serverfd, (sockaddr *) &_serveraddr, sizeof(sockaddr_in)) < 0) {
+    if (bind(_serverfd, (sockaddr *) &_serveraddr, sizeof(_serveraddr)) < 0) {
         _ui->print("Failed to bind socket.");
         return;
     }
@@ -176,8 +178,6 @@ void Projector::listen(int port) {
 }
 
 void Projector::doAccept() {
-    _ui->print("Socket listener thread started."); // DEBUG /////////////////////////////////////////
-    
     while (_isListening == true) {
         this->accept();
     }
@@ -188,8 +188,6 @@ void Projector::accept() {
     
     bzero(&_clientaddr, sizeof(_clientaddr));
     
-    _ui->print("Blocking on accept."); // DEBUG ////////////////////////////////////////////
-    
     // Only accept one connection.
     _clientfd = ::accept(_serverfd, (sockaddr *) &_clientaddr, &_clientlen);
     if (_clientfd < 0) {
@@ -197,9 +195,8 @@ void Projector::accept() {
         return;
     }
     else {
-        _ui->print("Client connection accepted."); // DEBUG //////////////////////////////////
-        
         _clientConnected = time(NULL);
+        _ui->print("Client connected.");
         
         // Configure client socket to blocking.
         int sflags = fcntl(_clientfd, F_GETFL, 0);
@@ -230,8 +227,6 @@ void Projector::accept() {
             fprintf(_sout, "PJLINK 0\r\n");
         }
         fflush(_sout);
-        
-        _ui->print("Ack connection."); // DEBUG ///////////////////////////////////////////////
         
         while (_isConnected == true) {
             doNetworking();
