@@ -45,7 +45,6 @@ private:
     static const int CMD_STATE_ERROR        = 5;
     static const int CMD_STATE_LAMP         = 6;
     static const int CMD_STATE_HOURS        = 7;
-    static const int CMD_STATE_LISTEN       = 8;
     
     static UI *_instance;
     

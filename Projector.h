@@ -103,6 +103,9 @@ public:
     bool isListening();
     bool isConnected();
     
+    int getPort();
+    void setPort(int port);
+    
 
 private:
     static Projector *_instance;
@@ -134,7 +137,7 @@ private:
     std::thread *_socketListener;
     std::thread *_socketTimer;
     
-    int _port;
+    std::atomic_int _port;
     
     std::atomic_bool _isListening;
     std::atomic_bool _isConnected;
@@ -152,7 +155,7 @@ private:
     Projector(const Projector &orig);
     const Projector &operator=(const Projector &orig);
     
-    void accept();
+    void accept();    
     
     /**
      * Traps a thread in a socket accept loop.

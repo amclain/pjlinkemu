@@ -43,6 +43,7 @@ Projector::Projector() {
     
     _PJLinkName = "Emulator";
     
+    _port = 4352;
     
     _socketListener = NULL;
     _socketTimer = NULL;
@@ -69,6 +70,14 @@ Projector::Projector(const Projector &orig) {
 }
 
 const Projector &Projector::operator=(const Projector &orig) {
+}
+
+int Projector::getPort() {
+    return _port;
+}
+
+void Projector::setPort(int port) {
+    if (port > 0) _port = port;
 }
 
 int Projector::getPowerState() {
@@ -144,7 +153,7 @@ void Projector::closeClient() {
 }
 
 void Projector::listen() {
-    listen(4352);
+    listen(_port);
 }
 
 void Projector::listen(int port) {

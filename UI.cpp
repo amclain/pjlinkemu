@@ -265,7 +265,7 @@ void UI::refresh() {
         wprintw(_connectionStatus, "Closed");
     }
     
-    mvwprintw(_connectionStatus, 1, 0, "Port: %i", 4352);
+    mvwprintw(_connectionStatus, 1, 0, "Port: %i", _projector->getPort());
 
     
     wrefresh(_borders);
@@ -368,6 +368,11 @@ void UI::refresh() {
 
 void UI::doUserInput() {
     int inputGroup = 0;
+    
+    int separatorPos;
+    
+    string command = "";
+    string value = "";
     
     while (1) {    
         int key = wgetch(_command);
@@ -510,6 +515,21 @@ void UI::doUserInput() {
                     case KEY_ENTER:
                     case '\n':
                         //print(_commandString); // DEBUG ////////////////////////////////////////////////////////////////////////////////
+                        
+                        // Search for command/value separator.
+                        separatorPos = _commandString.find(" ");
+                        if (separatorPos > -1) {
+                            command = _commandString.substr(0, separatorPos);
+                            if (_commandString.length() > separatorPos - 1) value = _commandString.substr(separatorPos + 1);
+                        }
+                        
+                        // Execute command.
+                        if (command == "port") {
+                            if (stoi(value) > 0) _projector->setPort(stoi(value));
+                        }
+                        
+                        //print("CMD: " + command + " " + value); // DEBUG ////////////////////////////////////////////////////////////////////////////////
+                        
                         _commandWindowState = CMD_STATE_MENU;
                         break;
                         
