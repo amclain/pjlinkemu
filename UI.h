@@ -94,6 +94,13 @@ private:
     void bufferKeyPress(int key);
     
     void clearCommandBuffer();
+    
+    void consoleLineUp();
+    void consoleLineDown();
+    void consolePageUp();
+    void consolePageDown();
+    void consoleHome();
+    void consoleEnd();
 };
 
 #endif	/* UI_H */

@@ -420,37 +420,32 @@ void UI::doUserInput() {
         
         // Home
         if (key2 == 79 && key3 == 72 && key4 == -1) {
-            _consoleFrozen = true;
-            _consoleEndLine = 0;
+            consoleHome();
         }
         
         // End
         else if (key2 == 79 && key3 == 70 && key4 == -1) {
-            _consoleFrozen = false;
+            consoleEnd();
         }
         
         // Page Up
         else if (key2 == 91 && key3 == 53 && key4 == 126) {
-            _consoleFrozen = true;
-            _consoleEndLine -= _consoleHeight / 2;
+            consolePageUp();
         }
         
         // Page Down
         else if (key2 == 91 && key3 == 54 && key4 == 126) {
-            _consoleEndLine += _consoleHeight / 2;
-            if (_consoleEndLine >= _consoleBuffer.size() - 1) _consoleFrozen = false;
+            consolePageDown();
         }
         
         // Arrow Up
         else if (key2 == 91 && key3 == 65 && key4 == -1) {
-            _consoleFrozen = true;
-            _consoleEndLine--;
+            consoleLineUp();
         }
         
         // Arrow Down
         else if (key2 == 91 && key3 == 66 && key4 == -1) {
-            if (_consoleEndLine < _consoleBuffer.size() - 1) _consoleEndLine++;
-            if (_consoleEndLine == _consoleBuffer.size() - 1) _consoleFrozen = false;
+            consoleLineDown();
         }
         
         // Arrow Left
@@ -469,6 +464,16 @@ void UI::doUserInput() {
             
             case CMD_STATE_MENU:
                 switch (key) {
+                    
+                    // Console Quick Navigation
+                    case 'k':   consoleLineUp();        break;
+                    case 'j':   consoleLineDown();      break;
+                    case 'l':   consolePageUp();        break;
+                    case 'h':   consolePageDown();      break;
+                    case 'g':   consoleHome();          break;
+                    case 'G':   consoleEnd();           break;
+                    
+                    // Projector State Hotkeys
                     case '1':
                         _commandWindowState = CMD_STATE_POWER;
                         break;
@@ -494,13 +499,15 @@ void UI::doUserInput() {
                         _commandWindowState = CMD_STATE_HOURS;
                         break;
 
-                    case ':':   // Open command prompt.
+                    // Open command prompt.
+                    case ':':
                         clearCommandBuffer();
                         mvwprintw(_command, 0, 0, ":");
                         _commandWindowState = CMD_STATE_PROMPT;
                         break;
                         
-                    case 'l':   // Listen for connection or close connection.
+                    // Listen for connection or close connection.
+                    case 'o':
                         if (_projector->isListening() == true) {
                             _projector->close();
                         }
@@ -508,7 +515,8 @@ void UI::doUserInput() {
                             _projector->listen();
                         }
                         break;
-
+                    
+                    // Exit application.
                     case 'q':
                         exit(0);
                         break;
@@ -667,4 +675,33 @@ void UI::print(const std::string &message) {
     
     _consoleBuffer.push_back(message);
     this->refresh();
+}
+
+void UI::consoleLineUp() {
+    _consoleFrozen = true;
+    _consoleEndLine--;
+}
+
+void UI::consoleLineDown() {
+    if (_consoleEndLine < _consoleBuffer.size() - 1) _consoleEndLine++;
+    if (_consoleEndLine == _consoleBuffer.size() - 1) _consoleFrozen = false;
+}
+
+void UI::consolePageUp() {
+    _consoleFrozen = true;
+    _consoleEndLine -= _consoleHeight / 2;
+}
+
+void UI::consolePageDown() {
+    _consoleEndLine += _consoleHeight / 2;
+    if (_consoleEndLine >= _consoleBuffer.size() - 1) _consoleFrozen = false;
+}
+
+void UI::consoleHome() {
+    _consoleFrozen = true;
+    _consoleEndLine = 0;
+}
+
+void UI::consoleEnd() {
+    _consoleFrozen = false;
 }
