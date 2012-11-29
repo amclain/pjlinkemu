@@ -211,7 +211,17 @@ void Projector::accept() {
         
         // Convert to human time.
         struct tm *connectedTime = localtime(&_clientConnected);
-        _ui->print("Client connected. " + to_string(connectedTime->tm_hour) + ":" + to_string(connectedTime->tm_min) + ":" + to_string(connectedTime->tm_sec));
+        
+        string hour = to_string(connectedTime->tm_hour);
+        if (hour.length() == 1) hour = "0" + hour;
+        
+        string minute = to_string(connectedTime->tm_min);
+        if (minute.length() == 1) minute = "0" + minute;
+        
+        string second = to_string(connectedTime->tm_sec);
+        if (second.length() == 1) second = "0" + second;
+        
+        _ui->print("Client connected. " + hour + ":" + minute + ":" + second);
         
         // Configure client socket to blocking.
         int sflags = fcntl(_clientfd, F_GETFL, 0);

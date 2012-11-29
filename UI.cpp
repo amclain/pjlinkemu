@@ -543,10 +543,17 @@ void UI::doUserInput() {
                             command = _commandString.substr(0, separatorPos);
                             if (_commandString.length() > separatorPos - 1) value = _commandString.substr(separatorPos + 1);
                         }
+                        else {
+                            command = _commandString;
+                        }
                         
-                        // Execute command.
+                        // Set listen socket port number.
                         if (command == "port") {
                             if (stoi(value) > 0) _projector->setPort(stoi(value));
+                        }
+                        // Exit application.
+                        else if (command == "q" || command == "quit" || command == "exit") {
+                            exit(0);
                         }
                         
                         //print("CMD: " + command + " " + value); // DEBUG ////////////////////////////////////////////////////////////////////////////////
