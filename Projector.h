@@ -159,7 +159,7 @@ private:
      */
     void doAccept();
     
-    void doNetworking();
+    void doRead();
     
     void resetSocketTimeout();
 };

@@ -13,7 +13,7 @@
 #include <fstream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <regex>
+#include <regex.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
@@ -218,23 +218,24 @@ void Projector::accept() {
         resetSocketTimeout();
         
         // Acknowledge client connection.
+        string greeting = "PJLINK 0";
+        
         if (_PJLinkUseAuthentication == true) {
             // TODO: Implement PJLink connection challenge.
             //       PJLink spec p23.
-            fprintf(_sout, "PJLINK 0\r\n");
         }
-        else {
-            fprintf(_sout, "PJLINK 0\r\n");
-        }
+        fprintf(_sout, "%s\r\n", greeting.c_str());
         fflush(_sout);
         
+        _ui->print("> " + greeting);
+        
         while (_isConnected == true) {
-            doNetworking();
+            doRead();
         }
     }
 }
 
-void Projector::doNetworking() {
+void Projector::doRead() {
     if (_isConnected == false) return;
     if (_sin == NULL) return;
     
@@ -245,59 +246,76 @@ void Projector::doNetworking() {
     ssize_t readResult = read(_clientfd, rbuf, sizeof(rbuf));
     if (readResult <= -1) {
         // Read error.
+        _isConnected = false;
+        _ui->print("Read error.");
+        _ui->refresh();
         return;
     }
     else if (readResult == 0) {
         // EOF
         _isConnected = false;
+        _ui->refresh();
         return;
     }
     
     resetSocketTimeout();
     
     string received(rbuf);
-    string response("ERR1"); // Undefined PJLink command.
     
     // Check for command and parameter.
-    smatch results;
-    bool found = regex_match(received, results, regex("%1(\\w+)\\ (\\?|[\\d]*)[\\r\\n]"));
+    regex_t regex;
+    int result = 0;
+    size_t nmatches = 3;
+    regmatch_t pmatch[3];
     
-    string command = results.str(1);
-    string value = results.str(2);
+    result = regcomp(&regex, "%1(\\w+)\\ (\\?|[0-9]+)\\r?\\n?", REG_EXTENDED);
+    if (result != 0) {
+        _ui->print("Error compiling regex.");
+    }
+    else {
+        result = regexec(&regex, received.c_str(), nmatches, pmatch, REG_EXTENDED);
+    }
+    
+    string command = (result == 0 && pmatch[1].rm_so >= 0) ? received.substr(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so) : "";
+    string value = (result == 0 && pmatch[2].rm_so >= 0) ? received.substr(pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so) : "";
     
     // DEBUG ////////////////////////////////////////////////////////////////////////////////
-    _ui->print(command + " " + value);
+    // Change this to the entire received string minus line terminators.
+    _ui->print("< " + command + " " + value);
     
+    string response = "ERR1"; // Undefined PJLink command.
     
     if (command.compare("POWR") == 0) {
-        if (value.compare("1")) {
+        if (value.compare("1") == 0) {
             _PJLinkPower = POWER_ON;
-            response = string("%1POWR=OK");
+            response = "%1POWR=OK";
         }
         else if (value.compare("0") == 0) {
             _PJLinkPower = POWER_OFF;
-            response = string("%1POWR=OK\r\n");
+            response = "%1POWR=OK";
         }
         // Power query.
         else if (value.compare("?") == 0) {
             switch (_PJLinkPower) {
-                case POWER_ON:      response = string("%1POWR=1");  break;
-                case POWER_COOLING: response = string("%1POWR=2");  break;
-                case POWER_WARMING: response = string("%1POWR=3");  break;
+                case POWER_ON:      response = "%1POWR=1";  break;
+                case POWER_COOLING: response = "%1POWR=2";  break;
+                case POWER_WARMING: response = "%1POWR=3";  break;
                 case POWER_OFF:
-                default:            response = string("%1POWR=0");  break;
+                default:            response = "%1POWR=0";  break;
             }
         }
         // Power instruction out of parameter.
-        else if (received.find("%1POWR ")) {
-            response = string("%1POWR=ERR2");
+        else if (value.compare("") == 0) {
+            response = "%1POWR=ERR2";
         }
     }
     
     fprintf(_sout, "%s\r\n", response.c_str());
     fflush(_sout);
     
-    if (response.find("ERR") != string::npos) _ui->refresh();
+    _ui->print("> " + response);
+    
+    _ui->refresh();
 }
 
 void Projector::resetSocketTimeout() {
