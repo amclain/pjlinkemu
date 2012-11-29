@@ -28,6 +28,10 @@ public:
     static const int AVMUTE_AUDIO       = 21;
     static const int AVMUTE_BOTH        = 31;
     
+    static const int AVMUTE_UNMUTE_VIDEO= 10;
+    static const int AVMUTE_UNMUTE_AUDIO= 20;
+    static const int AVMUTE_UNMUTE_BOTH = 30;
+    
     static const int INPUT_RGB_1        = 11;
     static const int INPUT_RGB_2        = 12;
     static const int INPUT_RGB_3        = 13;

@@ -298,28 +298,102 @@ void Projector::doRead() {
     
     string response = "ERR1"; // Undefined PJLink command.
     
-    if (command.compare("POWR") == 0) {
-        if (value.compare("1") == 0) {
+    if (command == "POWR") {
+        if (value == "1") {
             _PJLinkPower = POWER_ON;
             response = "%1POWR=OK";
         }
-        else if (value.compare("0") == 0) {
+        else if (value == "0") {
             _PJLinkPower = POWER_OFF;
             response = "%1POWR=OK";
         }
         // Power query.
-        else if (value.compare("?") == 0) {
-            switch (_PJLinkPower) {
-                case POWER_ON:      response = "%1POWR=1";  break;
-                case POWER_COOLING: response = "%1POWR=2";  break;
-                case POWER_WARMING: response = "%1POWR=3";  break;
-                case POWER_OFF:
-                default:            response = "%1POWR=0";  break;
-            }
+        else if (value == "?") {
+            response = "%1POWR=" + to_string(_PJLinkPower);
         }
         // Power instruction out of parameter.
-        else if (value.compare("") == 0) {
+        else if (value == "") {
             response = "%1POWR=ERR2";
+        }
+    }
+    
+    else if (command == "INPT") {
+        if (value == "?") {
+            response = "%1INPT=" + to_string(_PJLinkInput);
+        }
+        else if (value == "") {
+            response = "%1INPT=ERR2";
+        }
+        else {
+            int inputValue = stoi(value);
+            if (inputValue >= 11 && inputValue <= 59) {
+                _PJLinkInput = inputValue;
+            }
+            else {
+                // Out of range.
+                response = "%1INPT=ERR2";
+            }
+        }
+    }
+    
+    else if (command == "AVMT") {
+        if (value == "?") {
+            response = "%1AVMT=" + to_string(_PJLinkAVMute);
+        }
+        else if (value == "") {
+            response = "%1AVMT=ERR2";
+        }
+        else {
+            int avmtValue = stoi(value);
+            
+            switch (avmtValue) {
+                case AVMUTE_VIDEO:
+                    _PJLinkAVMute = (_PJLinkAVMute == AVMUTE_AUDIO) ?  (int) AVMUTE_BOTH : (int) AVMUTE_VIDEO;
+                    break;
+
+                case AVMUTE_UNMUTE_VIDEO:
+                    _PJLinkAVMute = (_PJLinkAVMute == AVMUTE_BOTH) ? (int) AVMUTE_AUDIO : (int) AVMUTE_NONE;
+                    break;
+                    
+                case AVMUTE_AUDIO:
+                    _PJLinkAVMute = (_PJLinkAVMute == AVMUTE_VIDEO) ? (int) AVMUTE_BOTH : (int) AVMUTE_AUDIO;
+                    break;
+                    
+                case AVMUTE_UNMUTE_AUDIO:
+                    _PJLinkAVMute = (_PJLinkAVMute == AVMUTE_BOTH) ? (int) AVMUTE_VIDEO : (int) AVMUTE_NONE;
+                    break;
+                    
+                case AVMUTE_BOTH:
+                    _PJLinkAVMute = AVMUTE_BOTH;
+                    break;
+                    
+                case AVMUTE_UNMUTE_BOTH:
+                    _PJLinkAVMute = AVMUTE_NONE;
+                    break;
+
+                default:
+                    response = "%1AVMT=ERR2";
+                    break;
+            }
+        }
+    }
+    
+    else if (command == "ERST") {
+        if (value == "?") {
+            response = "%1ERST=" + string("000000"); // TODO: Implement error status.
+        }
+    }
+    
+    else if (command == "LAMP") {
+        if (value == "?") {
+            string lampOn = (_PJLinkPower == POWER_ON || _PJLinkPower == POWER_WARMING) ? "1" : "0";
+            response = "%1LAMP=" + to_string(_PJLinkLampHours) + " " + lampOn;
+        }
+    }
+    
+    else if (command == "NAME") {
+        if (value == "?") {
+            response = "%1NAME=" + _PJLinkName;
         }
     }
     
