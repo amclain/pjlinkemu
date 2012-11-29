@@ -191,12 +191,16 @@ void Projector::accept() {
     // Only accept one connection.
     _clientfd = ::accept(_serverfd, (sockaddr *) &_clientaddr, &_clientlen);
     if (_clientfd < 0) {
-        _ui->print("Failed to accept client.");
+        if (_isListening == true) _ui->print("Failed to accept client."); // If _isListening is false, user closed the socket listener.
+        _ui->refresh();
         return;
     }
     else {
         _clientConnected = time(NULL);
-        _ui->print("Client connected.");
+        
+        // Convert to human time.
+        struct tm *connectedTime = localtime(&_clientConnected);
+        _ui->print("Client connected. " + to_string(connectedTime->tm_hour) + ":" + to_string(connectedTime->tm_min) + ":" + to_string(connectedTime->tm_sec));
         
         // Configure client socket to blocking.
         int sflags = fcntl(_clientfd, F_GETFL, 0);
