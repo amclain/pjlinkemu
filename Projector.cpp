@@ -197,6 +197,8 @@ void Projector::accept() {
     
     bzero(&_clientaddr, sizeof(_clientaddr));
     
+    // TODO: Implement poll and yield thread.
+    
     // Only accept one connection.
     _clientfd = ::accept(_serverfd, (sockaddr *) &_clientaddr, &_clientlen);
     if (_clientfd < 0) {
@@ -255,6 +257,8 @@ void Projector::doRead() {
     // Read command.
     char rbuf[1024]; // Read buffer.
     bzero (rbuf, sizeof(rbuf));
+    
+    // TODO: Implement poll and yield thread.
     
     ssize_t readResult = read(_clientfd, rbuf, sizeof(rbuf));
     if (readResult <= -1) {
@@ -326,6 +330,8 @@ void Projector::doRead() {
         }
         else {
             int inputValue = stoi(value);
+            response = "%1INPT=OK";
+            
             if (inputValue >= 11 && inputValue <= 59) {
                 _PJLinkInput = inputValue;
             }
@@ -345,6 +351,7 @@ void Projector::doRead() {
         }
         else {
             int avmtValue = stoi(value);
+            response = "%1AVMT=OK";
             
             switch (avmtValue) {
                 case AVMUTE_VIDEO:

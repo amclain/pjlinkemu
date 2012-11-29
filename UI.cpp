@@ -301,7 +301,7 @@ void UI::refresh() {
         int consoleStartLine = (_consoleEndLine < _consoleHeight) ? 0 : _consoleEndLine - _consoleHeight + 1;
         
         for (int line = consoleStartLine; line <= _consoleEndLine; line++) {
-            wprintw(_console, "%3i:  %s\n", line + 1, _consoleBuffer[line].c_str());
+            wprintw(_console, "%4i:  %s\n", line + 1, _consoleBuffer[line].c_str());
         }
     }
     
@@ -337,6 +337,19 @@ void UI::refresh() {
                 wprintw(_command, " ");
             }
             mvwprintw(_command, 0, 0, " 1x RGB | 2x VIDEO | 3x DIGITAL | 4x STORAGE | 5x NETWORK |");
+            wattroff(_command, A_STANDOUT);
+            break;
+            
+            
+        case CMD_STATE_AVMUTE:
+            curs_set(0);
+            
+            wattron(_command, A_STANDOUT);
+            wmove(_command, 0, 0);
+            for (int i = 0; i < x; i++) {
+                wprintw(_command, " ");
+            }
+            mvwprintw(_command, 0, 0, " 0 UNMUTED | 1 MUTE A/V | 2 MUTE VIDEO | 3 MUTE AUDIO |");
             wattroff(_command, A_STANDOUT);
             break;
             
@@ -578,6 +591,20 @@ void UI::doUserInput() {
                     inputGroup = 0;
                     _commandWindowState = CMD_STATE_MENU;
                 }
+                break;
+                
+                
+            case CMD_STATE_AVMUTE:
+                switch(key) {
+                    case '`':
+                    case '0':   _projector->setAVMuteState(Projector::AVMUTE_NONE);     break;
+                    case '1':   _projector->setAVMuteState(Projector::AVMUTE_BOTH);     break;
+                    case '2':   _projector->setAVMuteState(Projector::AVMUTE_VIDEO);    break;
+                    case '3':   _projector->setAVMuteState(Projector::AVMUTE_AUDIO);    break;
+                    default:                                                            break;
+                }
+                
+                _commandWindowState = CMD_STATE_MENU;
                 break;
                 
                 
